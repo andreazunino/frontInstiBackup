@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Cursos Inscriptos - Instiform</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet"> 
+    <link rel="icon" href="Logo Instiform.png" type="image/x-icon">
+    <style>
+        body {
+            background: url('fondo.avif') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn btn-logout" onclick="window.location.href='index.html'">Cerrar sesión</button>
+    <div class="container-fluid text-center welcome-section">
+        <img src="Logo instiform.png" alt="Logo de Instiform" class="img-fluid logo-small">
+        <h1 class="welcome-heading">Ver Cursos Inscriptos</h1>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="menuEstudiante.html">Volver al Menú Estudiante</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>Ver Cursos Inscriptos</h2>
+        <form id="verCursosForm">
+            <div class="form-group">
+                <label for="dni">DNI del Estudiante:</label>
+                <input type="text" class="form-control" id="dni" name="dni" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Buscar Cursos</button>
+        </form>
+
+        <div id="cursosInscriptos" class="mt-4"></div>
+    </div>
+
+    <script>
+        document.getElementById('verCursosForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const dni = document.getElementById('dni').value;
+
+            // Verificar si el DNI es válido
+            if (!dni) {
+                alert('Por favor, ingrese el DNI del estudiante.');
+                return;
+            }
+
+            // Buscar cursos inscriptos del estudiante
+            fetch('verCursosInscriptos.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `dni=${dni}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const cursosInscriptos = document.getElementById('cursosInscriptos');
+                cursosInscriptos.innerHTML = '';
+
+                if (data.error) {
+                    cursosInscriptos.innerHTML = `<p>${data.error}</p>`;
+                    return;
+                }
+
+                if (data.cursos.length === 0) {
+                    cursosInscriptos.innerHTML = '<p>No hay cursos inscriptos para el estudiante.</p>';
+                    return;
+                }
+
+                let html = '<h3>Cursos Inscriptos</h3>';
+                html += '<table class="table table-striped">';
+                html += '<thead><tr><th>Curso</th><th>Nota</th></tr></thead>';
+                html += '<tbody>';
+                data.cursos.forEach(curso => {
+                    html += `
+                        <tr>
+                            <td>${curso.nombre_curso}</td>
+                            <td>${curso.nota ? curso.nota : 'No asignada'}</td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table>';
+                cursosInscriptos.innerHTML = html;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

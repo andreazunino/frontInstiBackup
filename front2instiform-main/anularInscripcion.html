@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anular Inscripción - Instiform</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet"> 
+    <link rel="icon" href="Logo Instiform.png" type="image/x-icon">
+    <style>
+        body {
+            background: url('fondo.avif') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn btn-logout" onclick="window.location.href='index.html'">Cerrar sesión</button>
+    <div class="container-fluid text-center welcome-section">
+        <img src="Logo instiform.png" alt="Logo de Instiform" class="img-fluid logo-small">
+        <h1 class="welcome-heading">Anular Inscripción</h1>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="menuEstudiante.html">Volver al Menú Estudiante</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>Anular Inscripción a Curso</h2>
+        <form id="anularForm">
+            <div class="form-group">
+                <label for="dni">DNI del Estudiante:</label>
+                <input type="text" class="form-control" id="dni" name="dni" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Buscar Inscripciones</button>
+        </form>
+
+        <div id="inscripciones" class="mt-4"></div>
+    </div>
+
+    <script>
+        document.getElementById('anularForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const dni = document.getElementById('dni').value;
+
+            // Verificar si el DNI es válido
+            if (!dni) {
+                alert('Por favor, ingrese el DNI del estudiante.');
+                return;
+            }
+
+            // Buscar inscripciones del estudiante
+            fetch('buscarInscripciones.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `dni=${dni}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                const inscripciones = document.getElementById('inscripciones');
+                inscripciones.innerHTML = '';
+
+                if (data.error) {
+                    inscripciones.innerHTML = `<p>${data.error}</p>`;
+                    return;
+                }
+
+                if (data.inscripciones.length === 0) {
+                    inscripciones.innerHTML = '<p>No hay inscripciones encontradas para el estudiante.</p>';
+                    return;
+                }
+
+                let html = '<h3>Inscripciones del Estudiante</h3>';
+                html += '<table class="table table-striped">';
+                html += '<thead><tr><th>ID Inscripción</th><th>Curso</th><th>Acción</th></tr></thead>';
+                html += '<tbody>';
+                data.inscripciones.forEach(inscripcion => {
+                    html += `
+                        <tr>
+                            <td>${inscripcion.id}</td>
+                            <td>${inscripcion.nombre_curso}</td>
+                            <td><button class="btn btn-danger anularBtn" data-id="${inscripcion.id}">Anular</button></td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table>';
+                inscripciones.innerHTML = html;
+
+                document.querySelectorAll('.anularBtn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const inscripcionId = this.getAttribute('data-id');
+                        anularInscripcion(dni, inscripcionId);
+                    });
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function anularInscripcion(dni, inscripcionId) {
+            fetch('anularInscripcion.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `dni=${dni}&inscripcionId=${inscripcionId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Inscripción anulada con éxito.');
+                    document.getElementById('anularForm').dispatchEvent(new Event('submit'));
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
